@@ -5,6 +5,9 @@
 * Version: 1.0                                                                 *
 * Date:    21.11.2018                                                          *
 * Author:  Stefano Luise                                                       *
+* Version: 2.1                                                                 *
+* Date:    24.07.2019                                                          *
+* Introdotta estensione scontrino bar                                          *
 *******************************************************************************/
 
 //Controllo accesso
@@ -50,12 +53,16 @@ $dir_handle = @opendir($path) or die("Unable to open $path");
 
 ?>
 <form name="premi" method=post action="browsescontrini.php"> 
-<div style="position:absolute;left:220px;top:50px;font-weight:bold">Cucina</div>
+<div style="position:absolute;left:220px;top:50px;font-weight:bold">Cucina1</div>
 <div style="position:absolute;left:220px;top:65px;">
 <input type='checkbox' name='cucina' id='cucina' checked>
 </div>
-<div style="position:absolute;left:360px;top:50px;font-weight:bold">Cassa</div>
+<div style="position:absolute;left:360px;top:50px;font-weight:bold">Cucina2</div>
 <div style="position:absolute;left:360px;top:65px;">
+<input type='checkbox' name='cucina2' id='cucina2' checked>
+</div>
+<div style="position:absolute;left:500px;top:50px;font-weight:bold">Cassa</div>
+<div style="position:absolute;left:500px;top:65px;">
 <input type='checkbox' name='cassa' id='cassa' checked>
 </div>
 
@@ -87,6 +94,7 @@ closedir($dir_handle);
 <?
 if (isset($_POST['filtra'])) {
  $cucina = $_POST['cucina'];
+ $cucina2 = $_POST['cucina2'];
  $cassa = $_POST['cassa'];
  $nscontrino = $_POST['nscontrino'];
 
@@ -111,6 +119,18 @@ if (isset($_POST['filtra'])) {
  $connessione_stampante_cucina = $row['connessione'];
  $ip_stampante_cucina = $row['ip'];
 
+ $query = "SELECT * FROM stampanti WHERE cucina2 LIKE '1'";
+ $result = mysqli_query($link, $query);
+ $row=mysqli_fetch_assoc($result);
+ $nome_stampante_cucina2 = $row['nome'];
+ $formato_carta_cucina2 = $row['formatocarta'];
+ $tipo_stampante_cucina2 = $row['tipo'];
+ $id_stampante_cucina2 = $row['id'];
+ $prodid_stampante_cucina2_dec = hexdec($row['prodID']);
+ $vendid_stampante_cucina2_dec = hexdec($row['vendID']);
+ $connessione_stampante_cucina2 = $row['connessione'];
+ $ip_stampante_cucina2 = $row['ip'];
+
  $query = "SELECT * FROM stampanti WHERE nome LIKE '".$_SESSION['stampante']."'";
  $result = mysqli_query($link, $query);
  $row=mysqli_fetch_assoc($result);
@@ -128,11 +148,20 @@ if (isset($_POST['filtra'])) {
  $row=mysqli_fetch_assoc($dati);
  $abilita_stampa_cucina = $row['valore'];
 
+ $coda = "SELECT * FROM parametri WHERE descrizione LIKE 'abilita_stampa_cucina2'";
+ $dati = mysqli_query ($link,$coda);
+ $row=mysqli_fetch_assoc($dati);
+ $abilita_stampa_cucina2 = $row['valore'];
+
  $file = fopen("./scontrini/".$nscontrino,"r");
  $n_sco = fgets($file);
  $rec_scontrino = trim($n_sco);
  $rec_asporto = trim(fgets($file));
  $rec_coperti = trim(fgets($file));
+ $rec_ora = trim(fgets($file));
+ $rec_data = trim(fgets($file));
+ $data_string = explode("-",$rec_data);
+ $data_sql = $data_string[2]."-".$data_string[1]."-".$data_string[0];
  $rec_resto = "";
  while (!feof($file)) {
   $rec_resto .= fgets($file);
@@ -154,7 +183,8 @@ if (isset($_POST['filtra'])) {
   }
   else
   {
-   $comando = "sudo ./stampa.bash \"".$rec_scontrino."\" \"".$rec_asporto."\" \"".$rec_coperti."\" \"".$rec_resto."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cassa_dec." ".$vendid_stampante_cassa_dec." \"".$id_stampante_cassa."\" > /dev/null 2>&1 &";
+   $stringa_scontrino_full = $rec_scontrino."_".$data_sql."_".$rec_ora;
+   $comando = "sudo ./stampa.bash \"".$stringa_scontrino_full."\" \"".$rec_asporto."\" \"".$rec_coperti."\" \"".$rec_resto."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cassa_dec." ".$vendid_stampante_cassa_dec." \"".$id_stampante_cassa."\" > /dev/null 2>&1 &";
    exec($comando);
   }
  }
@@ -174,14 +204,44 @@ if (isset($_POST['filtra'])) {
   }
   else
   {
-   $comando = "sudo ./stampa.bash \"".$rec_scontrino."\" \"".$rec_asporto."\" \"".$rec_coperti."\" \"".$rec_resto."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cucina_dec." ".$vendid_stampante_cucina_dec." \"".$id_stampante_cucina."\" > /dev/null 2>&1 &";
+   $stringa_scontrino_full = $rec_scontrino."_".$data_sql."_".$rec_ora;
+   $comando = "sudo ./stampa.bash \"".$stringa_scontrino_full."\" \"".$rec_asporto."\" \"".$rec_coperti."\" \"".$rec_resto."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cucina_dec." ".$vendid_stampante_cucina_dec." \"".$id_stampante_cucina."\" > /dev/null 2>&1 &";
    exec($comando);
   }
  }
  else
  {
   ?><script type="text/javascript">
-  window.alert('Stampante cucina disabilitata');
+  window.alert('Stampante cucina1 disabilitata');
+  </script>
+  <?
+ }
+ }
+
+ if ($cucina2=='on')
+ {
+  $stampa_eseguita = 1;
+ // Stampa in cucina2
+ if ($abilita_stampa_cucina2 == 1)
+ {
+
+
+  if ($tipo_stampante_cucina2 != 'ESC-POS')
+  {
+   $comando = "lp -d ".$nome_stampante_cucina2." ./scontrini/".$nscontrino;
+   exec($comando);
+  }
+  else
+  {
+   $stringa_scontrino_full = $rec_scontrino."_".$data_sql."_".$rec_ora;
+   $comando = "sudo ./stampa.bash \"".$stringa_scontrino_full."\" \"".$rec_asporto."\" \"".$rec_coperti."\" \"".$rec_resto."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cucina2_dec." ".$vendid_stampante_cucina2_dec." \"".$id_stampante_cucina2."\" > /dev/null 2>&1 &";
+   exec($comando);
+  }
+ }
+ else
+ {
+  ?><script type="text/javascript">
+  window.alert('Stampante cucina2 disabilitata');
   </script>
   <?
  }

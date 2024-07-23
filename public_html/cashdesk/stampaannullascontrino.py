@@ -29,8 +29,8 @@ cursor.execute(sql)
 # Fetch all the rows in a list of lists.
 results = cursor.fetchall()
 for row in results:
- ip_stampante = row[5]
- connessione = row[4]
+ ip_stampante = row[6]
+ connessione = row[5]
 logging.info('IP Stampante '+ip_stampante)
 # disconnect from server
 db.close()

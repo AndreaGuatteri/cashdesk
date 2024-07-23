@@ -5,6 +5,18 @@
 * Version: 1.0                                                                 *
 * Date:    21.11.2018                                                          *
 * Author:  Stefano Luise                                                       *
+*                                                                              *
+* Version: 2.0                                                                 *
+* Date:    10.04.2019                                                          *
+* Introdotta gestione omaggi                                                   * 
+* Version: 2.1                                                                 *
+* Date:    24.07.2019                                                          *
+* Introdotta estensione scontrino bar                                          *
+* Date:    07.09.2019                                                          *
+* Righe 347 e 349 commentate e spostata lettura data e ora prima del while     *
+* Version: 2.2                                                                 *
+* Date:    28.07.2023                                                          *
+* Introdotta stampante2                                                        *
 *******************************************************************************/
 //Controllo accesso
 include("session_exists.php");
@@ -253,9 +265,13 @@ if (isset($_POST['ola_request']))
 {
 	$coperti = $_POST['coperti'];
 	$asporto = $_POST['asporto'];
+	$omaggio = $_POST['omaggio'];
+	$n_tavolo = $_POST['n_tavolo'];
 	$importo_ricevuto = $_POST['importo_ricevuto'];
 	$numero_scontrino = null;
-
+        $valore_omaggio = 0;
+if ($omaggio == "on")
+ $valore_omaggio = 1;
 	$query = "SELECT * FROM listino WHERE descrizione LIKE 'ESPORTAZIONE'";
 	$result = mysqli_query($link,$query);
 	$row=mysqli_fetch_array($result);
@@ -263,6 +279,7 @@ if (isset($_POST['ola_request']))
 
 // Individua se bar e/o cucina
 $cucina=false;
+$cucina2 = false;
 $bar=false;
 $query = "SELECT * FROM listino";
 $result = mysqli_query($link,$query);
@@ -274,8 +291,13 @@ while($row=mysqli_fetch_assoc($result)){
   $result2 = mysqli_query($link,$query2);
   $row2 = mysqli_fetch_assoc($result2);
   $tipo_piatto = $row2['tipo_piatto'];
-  if (($tipo_piatto == "primo")||($tipo_piatto == "secondo")||($tipo_piatto == "contorno"))
+  $cucina1_sel = $row2['cucina1'];
+  $cucina2_sel = $row2['cucina2'];
+//  if (($tipo_piatto == "primo")||($tipo_piatto == "secondo")||($tipo_piatto == "contorno"))
+  if ($cucina1_sel == "1")
    $cucina = true;
+  if ($cucina2_sel == "1")
+   $cucina2 = true;
   if ($tipo_piatto == "bar") 
    $bar=true;
  }
@@ -293,7 +315,7 @@ $result = mysqli_query($link,$query);
 $row=mysqli_fetch_assoc($result);
 $scontrino_bar = $row['valore'];
 
-if ($cucina) 
+if (($cucina)||($cucina2)) 
 {
  $numero_scontrino++;
  $query = "UPDATE parametri SET valore='".$numero_scontrino."' WHERE descrizione LIKE 'numero_scontrino'";
@@ -301,7 +323,7 @@ if ($cucina)
  $stringa_scontrino = $numero_scontrino;
 }
 
-if (($bar)&&(!$cucina)) 
+if (($bar)&&(!$cucina)&&(!$cucina2)) 
 {
  $scontrino_bar++;
  $query = "UPDATE parametri SET valore='".$scontrino_bar."' WHERE descrizione LIKE 'scontrino_bar'";
@@ -321,6 +343,8 @@ if (($scontrino_bar == null)||($numero_scontrino == null)) {
 
 $query = "SELECT * FROM listino";
 $result = mysqli_query($link,$query);
+$data = date("Y-m-d");
+$ora = date("H:i:s");
 while($row=mysqli_fetch_assoc($result)){
  $qty = $_POST['qty'.$row['id']];
  $note = $_POST['note'.$row['id']];
@@ -330,27 +354,31 @@ while($row=mysqli_fetch_assoc($result)){
   $row2 = mysqli_fetch_assoc($result2);
   $descrizione = $row2['descrizione'];
   $importo_totale = bcmul($qty, $row2['importo'], 2);
-  $data = date("Y-m-d");
+//  $data = date("Y-m-d");
   $utente = $_SESSION['userid'];
-  $ora = date("H:i:s");
+//  $ora = date("H:i:s");
   $tipo_piatto = $row2['tipo_piatto'];
   $buffer="INSERT INTO scontrini (coperti, scontrino,
 				 descrizione,
 				 qta,
+				 omaggio,
 				 importo,
 				 tipo_piatto,
 				 cassiere,
 				 data,
 				 ora,
-				 note)VALUES(\"".$coperti."\",\"".$stringa_scontrino."\",
+				 note,
+				 n_tavolo)VALUES(\"".$coperti."\",\"".$stringa_scontrino."\",
 				\"".$descrizione."\",
 				\"".$qty."\",
+				\"".$valore_omaggio."\",
 				\"".$importo_totale."\",
 				\"".$tipo_piatto."\",
 				\"".$utente."\",
 				\"".$data."\",
 				\"".$ora."\",
-				\"".$note."\")";
+				\"".$note."\",
+				\"".$n_tavolo."\")";
   $result3 = mysqli_query($link,$buffer);
  }
 }
@@ -359,20 +387,24 @@ if ($asporto == "on"){
 		 $buffer="INSERT INTO scontrini (coperti, scontrino,
 						 descrizione,
 						 qta,
+						 omaggio,
   						 importo,
   						 tipo_piatto,
   						 cassiere,
   						 data,
   						 ora,
-						 note)VALUES(\"".$coperti."\",\"".$stringa_scontrino."\",
+						 note,
+						 n_tavolo)VALUES(\"".$coperti."\",\"".$stringa_scontrino."\",
   						\"ESPORTAZIONE\",
   						\"1\",
+						\"".$valore_omaggio."\",
   						\"".$costo_asporto."\",
   						\"secondo\",
   						\"".$utente."\",
   						\"".$data."\",
   						\"".$ora."\",
-						\"".$note."\")";
+						\"".$note."\",
+						\"".$n_tavolo."\")";
  $result3 = mysqli_query($link,$buffer);
 }
 
@@ -397,6 +429,11 @@ $dati = mysqli_query ($link,$coda);
 $row=mysqli_fetch_assoc($dati);
 $abilita_stampa_cucina = $row['valore'];
 
+$coda = "SELECT * FROM parametri WHERE descrizione LIKE 'abilita_stampa_cucina2'";
+$dati = mysqli_query ($link,$coda);
+$row=mysqli_fetch_assoc($dati);
+$abilita_stampa_cucina2 = $row['valore'];
+
 	
 require('./fpdf/fpdf.php');
 
@@ -415,6 +452,21 @@ $vendid_stampante_cucina_dec = hexdec($row['vendID']);
 $connessione_stampante_cucina = $row['connessione'];
 $ip_stampante_cucina = $row['ip'];
 
+$query = "SELECT * FROM stampanti WHERE cucina2 LIKE '1'";
+$result = mysqli_query($link, $query);
+$row=mysqli_fetch_assoc($result);
+$nome_stampante_cucina2 = $row['nome'];
+$formato_carta_cucina2 = $row['formatocarta'];
+$tipo_stampante_cucina2 = $row['tipo'];
+$id_stampante_cucina2 = $row['id'];
+$prodid_stampante_cucina2 = "0x".$row['prodID'];
+$vendid_stampante_cucina2 = "0x".$row['vendID'];
+$codec_cucina2 = $row['codec'];
+$prodid_stampante_cucina2_dec = hexdec($row['prodID']);
+$vendid_stampante_cucina2_dec = hexdec($row['vendID']);
+$connessione_stampante_cucina2 = $row['connessione'];
+$ip_stampante_cucina2 = $row['ip'];
+
 $query = "SELECT * FROM stampanti WHERE nome LIKE '".$_SESSION['stampante']."'";
 $result = mysqli_query($link, $query);
 $row=mysqli_fetch_assoc($result);
@@ -429,24 +481,29 @@ $prodid_stampante_cassa_dec = hexdec($row['prodID']);
 $vendid_stampante_cassa_dec = hexdec($row['vendID']);
 $connessione_stampante_cassa = $row['connessione'];
 $ip_stampante_cassa = $row['ip'];
+$stringa_asporto = "";
+if ($omaggio == "on")
+ $stringa_asporto .= "OMAGGIO ";
 
 if ($asporto == "on")
-$stringa_asporto = "ASPORTO";
+ $stringa_asporto .= "ASPORTO";
 
-$ritorno = stampa('A5',$stringa_scontrino,$intestazione,$intestazione2,$asporto,$coperti,$data,$ora,$cucina,$bar,$importo_ricevuto);
+
+$ritorno = stampa($formato_carta_cassa,$stringa_scontrino,$intestazione,$intestazione2,$asporto,$coperti,$data,$ora,$cucina,$bar,$importo_ricevuto);
 $resto = $ritorno[0];
 $stringa_prt = $ritorno[1];
+$estensione_bar = $ritorno[2];
 $str_enc = urlencode ($stringa_prt);
 
 $data_s = date("d-m-Y");
 $nome_scontrino = "scontrino".$stringa_scontrino;
 $nome_file = "./scontrini/".$stringa_scontrino."_".$data_s;
-$testo_da_scaricare = $stringa_scontrino."\n".$stringa_asporto."\n".$coperti."\n".$stringa_prt;
+$testo_da_scaricare = $stringa_scontrino."\n".$stringa_asporto."\n".$coperti."\n".$ora."\n".$stringa_prt;
 file_put_contents($nome_file,$testo_da_scaricare,LOCK_EX);
 chmod ($nome_file,0777);
-if ($cucina) 
-{
 
+if (($cucina)||($cucina2)) 
+{
  // Stampa in cassa	 
   if ($tipo_stampante_cassa != 'ESC-POS')
   {
@@ -455,10 +512,14 @@ if ($cucina)
   }
   else
   {
-    $comando = "sudo ./stampa.bash \"".$stringa_scontrino."\" \"".$stringa_asporto."\" \"".$coperti."\" \"".$stringa_prt."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cassa_dec." ".$vendid_stampante_cassa_dec." \"".$id_stampante_cassa."\" > /dev/null 2>&1 &";
+    $stringa_scontrino_full = $stringa_scontrino."_".$data."_".$ora;
+    $comando = "sudo ./stampa.bash \"".$stringa_scontrino_full."\" \"".$stringa_asporto."\" \"".$coperti."\" \"".$stringa_prt."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cassa_dec." ".$vendid_stampante_cassa_dec." \"".$id_stampante_cassa."\" > /dev/null 2>&1 &";
     exec($comando);
-  }
+  }  
+}
 
+if ($cucina) 
+{
  // Stampa in cucina
  if ($abilita_stampa_cucina == 1)
  { 
@@ -469,7 +530,8 @@ if ($cucina)
   }
   else
   {
-    $comando = "sudo ./stampa.bash \"".$stringa_scontrino."\" \"".$stringa_asporto."\" \"".$coperti."\" \"".$stringa_prt."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cucina_dec." ".$vendid_stampante_cucina_dec." \"".$id_stampante_cucina."\" > /dev/null 2>&1 &";
+    $stringa_scontrino_full = $stringa_scontrino."_".$data."_".$ora;
+    $comando = "sudo ./stampa.bash \"".$stringa_scontrino_full."\" \"".$stringa_asporto."\" \"".$coperti."\" \"".$stringa_prt."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cucina_dec." ".$vendid_stampante_cucina_dec." \"".$id_stampante_cucina."\" > /dev/null 2>&1 &";
     exec($comando);
   }
  }
@@ -480,10 +542,35 @@ if ($cucina)
   </script>
   <?
  }
-
 }
 
-if ($bar&&!$cucina) 
+if ($cucina2) 
+{
+ // Stampa in cucina2
+ if ($abilita_stampa_cucina2 == 1)
+ { 
+  if ($tipo_stampante_cucina2 != 'ESC-POS')
+  {
+   $comando = "lp -d ".$tipo_stampante_cucina2." ./scontrini/".$nome_scontrino."_".$formato_carta_cucina2.".pdf";
+   exec($comando);
+  }
+  else
+  {
+    $stringa_scontrino_full = $stringa_scontrino."_".$data."_".$ora;
+    $comando = "sudo ./stampa.bash \"".$stringa_scontrino_full."\" \"".$stringa_asporto."\" \"".$coperti."\" \"".$stringa_prt."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cucina2_dec." ".$vendid_stampante_cucina2_dec." \"".$id_stampante_cucina2."\" > /dev/null 2>&1 &";
+    exec($comando);
+  }
+ }
+ else
+ {
+  ?><script type="text/javascript">
+  window.alert('Stampante cucina2 disabilitata');
+  </script>
+  <?
+ }
+}
+
+if ($bar&&!$cucina&&!$cucina2) 
 {
   if ($tipo_stampante_cassa != 'ESC-POS')
   {
@@ -493,7 +580,8 @@ if ($bar&&!$cucina)
   }
   else
   {
-    $comando = "sudo ./stampa.bash \"".$stringa_scontrino."\" \"".$stringa_asporto."\" \"".$coperti."\" \"".$stringa_prt."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cassa_dec." ".$vendid_stampante_cassa_dec." \"".$id_stampante_cassa."\" > /dev/null 2>&1 &";
+    $stringa_scontrino_full = $stringa_scontrino."_".$data."_".$ora;
+    $comando = "sudo ./stampa.bash \"".$stringa_scontrino_full."\" \"".$stringa_asporto."\" \"".$coperti."\" \"".$stringa_prt."\" \"stampascontrino.py\" \"".$intestazione."\" ".$prodid_stampante_cassa_dec." ".$vendid_stampante_cassa_dec." \"".$id_stampante_cassa."\" > /dev/null 2>&1 &";
     exec($comando);
   }
 }
@@ -734,7 +822,7 @@ while($row=mysqli_fetch_array($result))
  <th>TOTALE<br>Importo ricevuto</th>
  <th></th>
  <th></th>
- <th><input readonly type='text' style="font-size:90%;text-align:center;font-weight:bold;background-color:#ffff99" size='6' name="totale" value=0><br><input type='text' style="font-size:90%;text-align:center;font-weight:bold;background-color:#ffff99" size='6' name="importo_ricevuto"</th>
+ <th><input readonly type='text' style="font-size:90%;text-align:center;font-weight:bold;background-color:#ffff99" size='6' name="totale" value=0><br><input type='text' style="font-size:90%;text-align:center;font-weight:bold;background-color:#ffff99" size='6' name="importo_ricevuto"></th>
  <th>
  <table border='0'>
  <tr>
@@ -745,6 +833,16 @@ while($row=mysqli_fetch_array($result))
  <INPUT type='checkbox' name='asporto' onclick=sndReq1()>
  </td>
  </tr>
+ <tr>
+
+ <th>Omaggio</th>
+ <td>	
+ <INPUT type='checkbox' name='omaggio'>
+ </td>
+
+
+ </tr>
+ 
  <tr>
  <td>
  Coperti 
@@ -770,7 +868,17 @@ while($row=mysqli_fetch_array($result))
  </select>
  </td>
  </tr>
- </table>
+ 
+ <tr>
+ <td>
+ N° Tavolo
+ </td>
+ <td>
+   <input type='text' style="font-size:90%;text-align:center;font-weight:bold;background-color:#ffff99" size='6' name="n_tavolo">
+ </td>
+ </tr>
+ 
+  </table>
  </th>
  </tr>
 </tbody>
@@ -901,7 +1009,7 @@ if ($dim_foglio == "POS56")
  $delta4 = 50;
  $h1 = 10;
  $h2 = 4;
- $larghezza = 18;
+ $larghezza = 20;
  $xc = 2;
  $yc = 50;
  $xb = 2;
@@ -938,7 +1046,7 @@ if ($dim_foglio == "POS80")
  $delta4 = 58;
  $h1 = 10;
  $h2 = 4;
- $larghezza = 18;
+ $larghezza = 20;
  $xc = 2;
  $yc = 50;
  $xb = 2;
@@ -950,7 +1058,7 @@ if ($dim_foglio == "POS80")
  $maxheight = 30;
  $distaccobar = 60;
 }
-$larghezza_pos = 18; 
+$larghezza_pos = 20; 
 
 define('EURO', chr(128));
 $stringa_prt = "";
@@ -1065,7 +1173,7 @@ $pdf1->Text($m2,$deltah+17,"N.".$coperti." COPERTI");
 	 $pdf1->Text($xc,$yc+$delta_c,utf8_decode($row['descrizione']));
 	 $desc_cut = substr($row['descrizione'],0,$larghezza);
 	 $stringa_prt .= str_pad($desc_cut,$larghezza_pos);
-	 $stringa_prt .= "n.";
+	 $stringa_prt .= ""; //Opzione, inserire n. tra le virgolette
 	 $stringa_prt .= str_pad($row['qta'],3," ",STR_PAD_LEFT);
 	 $pdf1->Text($xc+$delta1,$yc+$delta_c,$row['qta']);
 	 $pdf1->Text($xc+$delta2,$yc+$delta_c,EURO);
@@ -1112,7 +1220,7 @@ $pdf1->Text($m2,$deltah+17,"N.".$coperti." COPERTI");
 	 $delta_b += 4;
 	 $desc_cut = substr($row['descrizione'],0,$larghezza);
 	 $stringa_bar .= str_pad($desc_cut,$larghezza_pos);
-	 $stringa_bar .= "n.";
+	 $stringa_bar .= "";  //Opzione inserire n. tra le virgolette
 	 $stringa_bar .= str_pad($row['qta'],3," ",STR_PAD_LEFT);
 	 $stringa_bar .= " €";
 	 $stringa_bar .= str_pad($importo_formattato,6," ",STR_PAD_LEFT);
@@ -1161,7 +1269,7 @@ $pdf1->Text($m2,$deltah+17,"N.".$coperti." COPERTI");
 	 $pdf1->Text($xc,$yc+$delta_c+6,$note_insieme);
 
 	 $stringa_prt .= "                       ________\x0d\x0a";
-	 $stringa_prt .= str_pad("TOTALE CUCINA",$larghezza_pos+5);
+	 $stringa_prt .= str_pad("TOTALE CUCINA",$larghezza_pos+3);
 //	 $stringa_prt .= " \xd5"; //€
 	 $stringa_prt .= " €"; //€
 	 $stringa_prt .= str_pad($totale_cucina,6," ",STR_PAD_LEFT);
@@ -1189,7 +1297,7 @@ $pdf1->Text($m2,$deltah+17,"N.".$coperti." COPERTI");
 	 $pdf1->Text($xb+$delta3+$sposta,$yb+$delta_b+3,$totale_bar);
 
 	 $stringa_bar .= "                       ________\x0d\x0a";
-	 $stringa_bar .= str_pad("TOTALE BAR",$larghezza_pos+5);
+	 $stringa_bar .= str_pad("TOTALE BAR",$larghezza_pos+3);
 //	 $stringa_bar .= " \xd5"; //€
 	 $stringa_bar .= " €"; //€
 	 $stringa_bar .= str_pad($totale_bar,6," ",STR_PAD_LEFT);
@@ -1202,7 +1310,7 @@ $pdf1->Text($m2,$deltah+17,"N.".$coperti." COPERTI");
 	$pdf1->Text($xb,$yb+$delta_b+11,"TOTALE GENERALE");
 
 	$stringa_bar .= "                       ________\x0d\x0a";
-	$stringa_bar .= str_pad("TOTALE GENERALE ",$larghezza_pos+5); 
+	$stringa_bar .= str_pad("TOTALE GENERALE ",$larghezza_pos+3); 
 //	$stringa_bar .= " \xd5"; 
 	$stringa_bar .= " €"; 
 	$totale_generale_fmt = number_format($totale_generale,2,",",".");
@@ -1242,8 +1350,8 @@ $pdf1->Text($m2,$deltah+17,"N.".$coperti." COPERTI");
 /* La stampa di un pdf su carta termica è molto lenta.                                                             */
 if ($dim_foglio == "A5")
  $pdf1->Output("./scontrini/".$nome_scontrino."_".$dim_foglio.".pdf","F");
-
-return array($resto,$stringa_prt);	
+$ext_bar = "BAR\x0d\x0a n.1 Coca Cola \x0d\x0a n.2 Acqua nat. \x0d\x0a";
+return array($resto,$stringa_prt,$ext_bar);	
 }
 	
 

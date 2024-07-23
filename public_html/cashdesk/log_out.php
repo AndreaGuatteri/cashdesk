@@ -52,7 +52,7 @@ history.forward();
 <h1></h1>
       		
       <script type="text/javascript">
-				if (window.confirm('Log Out.\n\nPremere OK per confermare il Logout e chiudere la finestra,\nANNULLA per aprire una nuova sessione')){
+				if (window.confirm('Log Out.\n\nPremere OK per confermare il Logout,\nANNULLA per aprire una nuova sessione')){
       	window.self.close('','','');
         }
         else

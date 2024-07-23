@@ -107,7 +107,7 @@ echo "</form>";
 if (isset($_POST['bt_salva'])) 
 {
 $nome_file = $_POST['nomefile'];
-$comando = "mysqldump -u ".$userdb." -p".$passworddb." sardea > ./backup/".$nome_file.".sql";
+$comando = "mysqldump -u ".$userdb." -p".$passworddb." cashdesk > ./backup/".$nome_file.".sql";
 system ($comando);
 ?>
 <script type="text/javascript">
@@ -120,7 +120,7 @@ window.alert('Backup eseguito');
 if (isset($_POST['bt_carica'])) 
 {
 $nome_file = $_POST['nomeloadfile'];
-$comando = "mysql -u ".$userdb." -p".$passworddb." sardea < ./backup/".$nome_file;
+$comando = "mysql -u ".$userdb." -p".$passworddb." cashdesk < ./backup/".$nome_file;
 system ($comando);
 ?>
 <script type="text/javascript">

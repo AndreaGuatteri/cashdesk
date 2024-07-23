@@ -11,7 +11,6 @@ opt[6]=$6
 opt[7]=$7
 opt[8]=$8
 opt[9]=$9
-opt[10]=$10
 python $5 "${opt[@]}"
 wait
 ) 200>/var/lock/.myscript.exclusivelock

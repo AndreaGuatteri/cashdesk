@@ -5,6 +5,10 @@
 * Version: 1.0                                                                 *
 * Date:    21.11.2018                                                          *
 * Author:  Stefano Luise                                                       *
+*                                                                              *
+* Version: 2.0                                                                 *
+* Date:    10.04.2019                                                          *
+* Introdotta gestione omaggi                                                   * 
 *******************************************************************************/
 
 //Controllo accesso
@@ -76,7 +80,7 @@ $delta_i = 0;
 /* Stampa dati cucina */
  $pdf->SetFont('Arial','',10);
  $totale_piatti_cucina = 0;
- $query2 = "SELECT descrizione,SUM(qta) FROM scontrini WHERE ((nullo !=1)&&(tipo_piatto NOT LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
+ $query2 = "SELECT descrizione,SUM(qta) FROM scontrini WHERE ((nullo !=1)&&(omaggio !=1)&&(tipo_piatto NOT LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
  $result2 = mysqli_query($link, $query2);
  while($row2=mysqli_fetch_assoc($result2))
  {
@@ -88,7 +92,7 @@ $delta_i = 0;
  }
 
  $totale_importo_cucina = 0;
- $query2 = "SELECT descrizione,SUM(importo) FROM scontrini WHERE ((nullo !=1)&&(tipo_piatto NOT LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
+ $query2 = "SELECT descrizione,SUM(importo) FROM scontrini WHERE ((nullo !=1)&&(omaggio !=1)&&(tipo_piatto NOT LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
  $result2 = mysqli_query($link, $query2);
  while($row2=mysqli_fetch_assoc($result2))
  {
@@ -118,7 +122,7 @@ $delta_i = 0;
  $pdf->SetFont('Arial','',10);
  $totale_piatti_bar = 0;
  $delta_q += 8;
- $query2 = "SELECT descrizione,SUM(qta) FROM scontrini WHERE ((nullo !=1)&&(tipo_piatto LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
+ $query2 = "SELECT descrizione,SUM(qta) FROM scontrini WHERE ((nullo !=1)&&(omaggio !=1)&&(tipo_piatto LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
  $result2 = mysqli_query($link, $query2);
  while($row2=mysqli_fetch_assoc($result2))
  {
@@ -129,11 +133,10 @@ $delta_i = 0;
   $totale_piatti_bar += $somma;
  }
 
-
  $pdf->SetFont('Arial','',10);
  $totale_importo_bar = 0;
  $delta_i += 8;
- $query2 = "SELECT descrizione,SUM(importo) FROM scontrini WHERE ((nullo !=1)&&(tipo_piatto LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
+ $query2 = "SELECT descrizione,SUM(importo) FROM scontrini WHERE ((nullo !=1)&&(omaggio !=1)&&(tipo_piatto LIKE 'bar')&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
  $result2 = mysqli_query($link, $query2);
  while($row2=mysqli_fetch_assoc($result2))
  {
@@ -168,8 +171,59 @@ $delta_i = 0;
   $pdf->Text($xi+10+$sposta,$yi+$delta_i+7,$totale_generale_fmt);
 
 
+
+
+/* Stampa dati omaggio */
+
+ $pdf->SetFont('Arial','',10);
+ $totale_piatti_omaggio = 0;
+ $delta_q += 10;
+ $query2 = "SELECT descrizione,SUM(qta) FROM scontrini WHERE ((nullo !=1)&&(omaggio =1)&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
+ $result2 = mysqli_query($link, $query2);
+ while($row2=mysqli_fetch_assoc($result2))
+ {
+  $somma = $row2['SUM(qta)'];
+//  $pdf->Text($xq,$yq+$delta_q,utf8_decode($row2['descrizione']));
+//  $pdf->Text($xq+70,$yq+$delta_q,$somma);
+  $delta_q += 4;
+  $totale_piatti_omaggio += $somma;
+ }
+
+ $pdf->SetFont('Arial','',10);
+ $totale_importo_omaggio = 0;
+ $delta_i += 10;
+ $query2 = "SELECT descrizione,SUM(importo) FROM scontrini WHERE ((nullo !=1)&&(omaggio =1)&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY descrizione";
+ $result2 = mysqli_query($link, $query2);
+ while($row2=mysqli_fetch_assoc($result2))
+ {
+  $somma = bcadd($row2['SUM(importo)'], 0, 2);
+  $somma_fmt = number_format($somma, 2,',','.');
+//  $pdf->Text($xi,$yi+$delta_i,EURO);
+  $sposta = 2.0*(7-strlen($somma_fmt));
+//  $pdf->Text($xi+10+$sposta,$yi+$delta_i,$somma_fmt);
+  $delta_i += 4;
+  $totale_importo_omaggio += $somma;
+ }
+
+ $pdf->SetFont('Arial','B',11);
+ $pdf->Text($xq,$yq+$delta_q,"TOTALE OMAGGIO");
+ $pdf->Text($xq+70,$yq+$delta_q,$totale_piatti_omaggio);
+ $pdf->Text($xi,$yi+$delta_i,EURO);
+ $totale_importo_omaggio = bcadd($totale_importo_omaggio, 0, 2);
+ $totale_importo_omaggio_fmt = number_format($totale_importo_omaggio, 2,',','.');
+ $sposta = 1.7*(7-strlen($totale_importo_omaggio_fmt));
+ $pdf->Text($xi+10+$sposta,$yi+$delta_i,$totale_importo_omaggio_fmt);
+
+/* FINE Stampa dati omaggio */
+
+
+
+
+
+
+
  $totale_coperti = 0;
- $query2 = "SELECT * FROM scontrini WHERE ((nullo !=1)&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY scontrino";
+ $query2 = "SELECT * FROM scontrini WHERE ((nullo !=1)&&(omaggio !=1)&&(data >= '".$data_da."')&&(data <= '".$data_a."')) GROUP BY scontrino";
  $result2 = mysqli_query($link, $query2);
  $pdf->SetFont('Arial','B',12);
  while($row2=mysqli_fetch_assoc($result2))

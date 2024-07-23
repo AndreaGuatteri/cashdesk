@@ -5,6 +5,8 @@
 * Version: 1.0                                                                 *
 * Date:    21.11.2018                                                          *
 * Author:  Stefano Luise                                                       *
+*                                                                              *
+* 28.07.2023:  Aggiunta stampante2                                             *
 *******************************************************************************/
 //Controllo accesso
 include("session_exists.php");
@@ -187,9 +189,14 @@ if (isset($_POST['press_cu']))
    $indice = $row['id'];
    $buffer = "UPDATE stampanti SET cucina='0' WHERE id LIKE '".$row['id']."'";  
    $coda = mysqli_query($link, $buffer);
+   $buffer = "UPDATE stampanti SET cucina2='0' WHERE id LIKE '".$row['id']."'";  
+   $coda = mysqli_query($link, $buffer);
   }
   $id_st = $_POST['printer']; 
   $buffer = "UPDATE stampanti SET cucina=\"1\" WHERE id LIKE '".$id_st."'";
+  $coda = mysqli_query($link, $buffer);
+  $id_c2 = $_POST['printer2']; 
+  $buffer = "UPDATE stampanti SET cucina2=\"1\" WHERE id LIKE '".$id_c2."'";
   $coda = mysqli_query($link, $buffer);
 }
 /* FINE pressione pulsante IMPOSTA in Selezione Stampante Cucina */
@@ -245,7 +252,10 @@ echo "<td align='center'>";
 echo "<b>Nome</b>";
 echo "</td>";
 echo "<td align='center'>";
-echo "<b>Cucina</b>";
+echo "<b>Cucina1</b>";
+echo "</td>";
+echo "<td align='center'>";
+echo "<b>Cucina2</b>";
 echo "</td>";
 echo "<td align='center'>";
 echo "<b>Rimuovi</b>";
@@ -279,12 +289,12 @@ if (mysqli_num_rows($result) > 0) {
     echo $row["codec"];
     echo "</td>";
 
-
-     if ($row["cucina"] == 1)
-     {
       echo "<td align='center'>";
       echo $row["nome"];
       echo "</td>";
+
+     if ($row["cucina"] == 1)
+     {
       echo "<td align='center'>";
       echo "<input type=\"radio\" name=\"printer\" value=\"".$row["id"]."\" checked><br>";
       echo "</td>";
@@ -292,12 +302,23 @@ if (mysqli_num_rows($result) > 0) {
      else
      {
       echo "<td align='center'>";
-      echo $row["nome"];
-      echo "</td>";
-      echo "<td align='center'>";
       echo "<input type=\"radio\" name=\"printer\" value=\"".$row["id"]."\"><br>";
       echo "</td>";
      }
+
+     if ($row["cucina2"] == 1)
+     {
+      echo "<td align='center'>";
+      echo "<input type=\"radio\" name=\"printer2\" value=\"".$row["id"]."\" checked><br>";
+      echo "</td>";
+     }
+     else
+     {
+      echo "<td align='center'>";
+      echo "<input type=\"radio\" name=\"printer2\" value=\"".$row["id"]."\"><br>";
+      echo "</td>";
+     }
+
     echo "<td align='center'>";
     echo "<button type=\"submit\" name=\"croce\" value=\"".$row['id']."\"><img src='img/croce.png' width='15px' height='15px'></button>";
     echo "</td>";

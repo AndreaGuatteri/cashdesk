@@ -5,6 +5,9 @@
 * Version: 1.0                                                                 *
 * Date:    21.11.2018                                                          *
 * Author:  Stefano Luise                                                       *
+*                                                                              *
+* 25.07.2019 - Aggiunto parametro estensione bar                               *
+* 28.07.2023 - Aggiunta stampante2                                             *
 *******************************************************************************/
 //Controllo accesso
 include("session_exists.php");
@@ -274,8 +277,11 @@ if (isset($_POST['incrementale']))
 	$incrementale = $_POST['incrementale'];
 	$archivio_scontrini = $_POST['archivio_scontrini'];
 	$abilita_stampa_cucina = $_POST['abilita_stampa_cucina'];
+	$abilita_stampa_cucina2 = $_POST['abilita_stampa_cucina2'];
+	$estensione_bar = $_POST['estensione_bar'];
 	$freccia = $_POST['freccia'];
 	$croce = $_POST['croce'];
+	//$prezzo_asporto = $_POST['prezzo_asporto'];
         $buffer = "SELECT * FROM parametri WHERE descrizione LIKE 'ultimo_indice'";
 	$coda = mysqli_query($link, $buffer); 
 	$row=mysqli_fetch_assoc($coda);
@@ -283,17 +289,12 @@ if (isset($_POST['incrementale']))
 	if ($archivio_scontrini == "on"){
 ?>
         <script type="text/javascript">
-        if (window.confirm('ATTENZIONE si procederà con la rimozione dall\'archivio di tutti i dati relativi agli scontrini emessi.\n\nPremere OK per continuare, altrimenti ANNULLA')){
-        }
-        else
-        {
-      	window.self.close('','','');
-	window.open('index.php','','');
-	}
+        window.alert('CANCELLATO ARCHIVIO SCONTRINI \n');
         </script>
 <?
         $buffer = "TRUNCATE TABLE scontrini";
-        $coda = mysqli_query($link, $buffer); 
+        $coda = mysqli_query($link, $buffer);
+	exec("rm /home/pi/public_html/cashdesk/scontrini/*"); 
 	}
 
 	if ($numero_scontrino == "on"){
@@ -312,6 +313,30 @@ if (isset($_POST['incrementale']))
          $buffer = "UPDATE parametri SET valore=0 WHERE descrizione LIKE 'abilita_stampa_cucina'";
 	 $coda = mysqli_query($link, $buffer); 
         }
+	
+	if ($abilita_stampa_cucina2 == "on"){
+         $buffer = "UPDATE parametri SET valore=1 WHERE descrizione LIKE 'abilita_stampa_cucina2'";
+	 $coda = mysqli_query($link, $buffer); 
+        }
+        else
+        {
+         $buffer = "UPDATE parametri SET valore=0 WHERE descrizione LIKE 'abilita_stampa_cucina2'";
+	 $coda = mysqli_query($link, $buffer); 
+        }
+
+
+	if ($estensione_bar == "on"){
+         $buffer = "UPDATE parametri SET valore=1 WHERE descrizione LIKE 'estensione_bar'";
+	 $coda = mysqli_query($link, $buffer); 
+        }
+        else
+        {
+         $buffer = "UPDATE parametri SET valore=0 WHERE descrizione LIKE 'estensione_bar'";
+	 $coda = mysqli_query($link, $buffer); 
+        }
+
+        //$buffer = "UPDATE parametri SET valore=\"".$prezzo_asporto."\" WHERE descrizione LIKE 'asporto'";
+	//$coda = mysqli_query($link, $buffer);
 	
         $buffer = "UPDATE parametri SET valore=\"".$logo."\" WHERE descrizione LIKE 'logo'";
 	$coda = mysqli_query($link, $buffer);
@@ -367,8 +392,14 @@ if (isset($_POST['incrementale']))
 	 $disponibile = $_POST['disponibile'.$j];
 	 if ($disponibile == "on") $disponibile = 1;
 	  else $disponibile = 0;
+	 $cucina1 = $_POST['cucina1'.$j];
+	 if ($cucina1 == "on") $cucina1 = 1;
+	  else $cucina1 = 0;
+	 $cucina2 = $_POST['cucina2'.$j];
+	 if ($cucina2 == "on") $cucina2 = 1;
+	  else $cucina2 = 0;
 	 
-         $buffer = "UPDATE listino SET descrizione=\"".$descrizione."\",importo=\"".$importo."\",posizione=\"".$posizione."\",tipo_piatto=\"".$tipo_piatto."\",disponibile=".$disponibile." WHERE id LIKE '".$id."'";
+         $buffer = "UPDATE listino SET descrizione=\"".$descrizione."\",importo=\"".$importo."\",posizione=\"".$posizione."\",tipo_piatto=\"".$tipo_piatto."\",disponibile=".$disponibile.",cucina1=".$cucina1.",cucina2=".$cucina2." WHERE id LIKE '".$id."'";
 	 $coda = mysqli_query($link, $buffer);
 	 }
         }
@@ -394,6 +425,8 @@ if (isset($_POST['incrementale']))
     					<th>Posizione</th>
     					<th>Tipo</th>
     					<th>Disponibile</th>
+    					<th>Cucina1</th>
+    					<th>Cucina2</th>
     					<th>Agg.riga</th>
     					<th>Canc.riga</th>
 					</tr>
@@ -450,6 +483,18 @@ if (isset($_POST['incrementale']))
  	   else
  	   echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"disponibile".$incrementale."\">"; 	   
 	   echo "</th>";
+	   echo "<th align='center'>";
+	   if ($row['cucina1'] == 1)
+ 	   echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"cucina1".$incrementale."\" CHECKED>";
+ 	   else
+ 	   echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"cucina1".$incrementale."\">"; 	   
+	   echo "</th>";
+	   echo "<th align='center'>";
+	   if ($row['cucina2'] == 1)
+ 	   echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"cucina2".$incrementale."\" CHECKED>";
+ 	   else
+ 	   echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"cucina2".$incrementale."\">"; 	   
+	   echo "</th>";
 	   echo "<th>";
 	   echo "<button type=\"submit\" name=\"freccia\" value=\"".$incrementale."\"><img src='img/freccia.png' width='20px' height='20px'></button>";
 	   echo "</th>";
@@ -490,7 +535,7 @@ if (isset($_POST['incrementale']))
 	   $abilita_stampa_cucina = $row['valore'];
 	   echo "<tr>";
 	   echo "<th align='left'>";
-	   echo "Abilita stampante cucina";	   
+	   echo "Abilita stampante cucina1";	   
 	   echo "</th>";	   
 	   echo "<th align='left'>";
 	   if ($abilita_stampa_cucina != 0)	
@@ -500,7 +545,42 @@ if (isset($_POST['incrementale']))
 	   echo "</th>";
   	   echo "</tr>";
 
+           $query = "SELECT * FROM parametri WHERE descrizione LIKE 'abilita_stampa_cucina2'";
+	   $result = mysqli_query($link, $query);
+	   $row=mysqli_fetch_assoc($result);
+	   $abilita_stampa_cucina2 = $row['valore'];
+	   echo "<tr>";
+	   echo "<th align='left'>";
+	   echo "Abilita stampante cucina2";	   
+	   echo "</th>";	   
+	   echo "<th align='left'>";
+	   if ($abilita_stampa_cucina2 != 0)	
+   	    echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"abilita_stampa_cucina2\" checked>"; 	   
+           else
+   	    echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"abilita_stampa_cucina2\">"; 	   
+	   echo "</th>";
+  	   echo "</tr>";
 
+           $query = "SELECT * FROM parametri WHERE descrizione LIKE 'estensione_bar'";
+	   $result = mysqli_query($link, $query);
+	   $row=mysqli_fetch_assoc($result);
+	   $estensione_bar = $row['valore'];
+	   echo "<tr>";
+	   echo "<th align='left'>";
+	   echo "Estensione scontrino BAR";	   
+	   echo "</th>";	   
+	   echo "<th align='left'>";
+	   if ($estensione_bar != 0)	
+   	    echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"estensione_bar\" checked>"; 	   
+           else
+   	    echo "<INPUT type='checkbox' style=\"font-size:90%;text-align:center\" name=\"estensione_bar\">"; 	   
+	   echo "</th>";
+  	   echo "</tr>";
+
+           /*$query = "SELECT * FROM parametri WHERE descrizione LIKE 'asporto'";
+	   $result = mysqli_query($link, $query);
+	   $row=mysqli_fetch_assoc($result);
+	   $prezzo_asporto = $row['valore'];*/
            $query = "SELECT * FROM parametri WHERE descrizione LIKE 'intestazione'";
 	   $result = mysqli_query($link, $query);
 	   $row=mysqli_fetch_assoc($result);
@@ -513,6 +593,16 @@ if (isset($_POST['incrementale']))
 	   $result = mysqli_query($link, $query);
 	   $row=mysqli_fetch_assoc($result);
 	   $logo = $row['valore'];
+
+	   /*echo "<tr>";
+	   echo "<th align='left'>";
+	   echo "Prezzo asporto";	   
+	   echo "</th>";	   
+	   echo "<th align='left'>";
+ 	   echo "<input type='text' style=\"font-size:90%;text-align:left\" size='40' name=\"prezzo_asporto\" value=\"".$prezzo_asporto."\">";
+	   echo "</th>";
+  	   echo "</tr>";*/
+
 
 	   echo "<tr>";
 	   echo "<th align='left'>";

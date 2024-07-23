@@ -5,6 +5,13 @@
 * Version: 1.0                                                                 *
 * Date:    21.11.2018                                                          *
 * Author:  Stefano LUISE                                                       *
+*                                                                              *
+* Version: 2.0                                                                 *
+* Date:    10.04.2019                                                          *
+* Aggiunta gestione pasti omaggio                                              *
+* Version: 2.1                                                                 *
+* Date:    24.07.2019                                                          *
+* Inserita estensione BAR a scontrino                                          *
 *******************************************************************************/
 
 //Controllo accesso
@@ -27,7 +34,7 @@ if(!isset($_SESSION['userid']))
 <!DOCTYPE html>
 <html>
 	<head>
-		<title><?php echo "CASH DESK v.1.0"; ?> </title>
+		<title><?php echo "CASH DESK v.2.1"; ?> </title>
 	</head>
 
 <!-- Costruzione dei Frame -->

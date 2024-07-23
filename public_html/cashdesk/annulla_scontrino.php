@@ -124,6 +124,15 @@ if (isset($_POST['ola_request']))
 	$row=mysqli_fetch_assoc($dati);
 	$intestazione = $row['valore'];
 
+	$coda = "SELECT * FROM parametri WHERE descrizione LIKE 'abilita_stampa_cucina'";
+	$dati = mysqli_query ($link, $coda);
+	$row=mysqli_fetch_assoc($dati);
+	$abilita_stampa_cucina = $row['valore'];
+
+	$coda = "SELECT * FROM parametri WHERE descrizione LIKE 'abilita_stampa_cucina2'";
+	$dati = mysqli_query ($link, $coda);
+	$row=mysqli_fetch_assoc($dati);
+	$abilita_stampa_cucina2 = $row['valore'];
 
 	require('./fpdf/fpdf.php');
 	define('EURO', chr(128));
@@ -154,31 +163,78 @@ if (isset($_POST['ola_request']))
 	 }
 	else
 	{
-	 // Stampa in cucina
-         $query = "SELECT * FROM stampanti WHERE cucina LIKE '1'";
-         $result = mysqli_query($link, $query);
-         $row=mysqli_fetch_assoc($result);
-         $nome_stampante_cucina = $row['nome'];
-         $formato_carta_cucina = $row['formatocarta'];
-         $tipo_stampante_cucina = $row['tipo'];
-         $id_stampante_cucina = $row['id'];
-         $prodid_stampante_cucina = "0x".$row['prodID'];
-         $vendid_stampante_cucina = "0x".$row['vendID'];
-         $codec_cucina = $row['codec'];
-         $prodid_stampante_cucina_dec = hexdec($row['prodID']);
-	 $vendid_stampante_cucina_dec = hexdec($row['vendID']);
-         $connessione_stampante_cucina = $row['connessione'];
-         $ip_stampante_cucina = $row['ip'];
-         if ($tipo_stampante_cucina != 'ESC-POS')
-         {
-	  $comando = "lp -d ".$tipo_stampante_cucina." ./scontrini/".$nome_ricevuta.".pdf";
-	  exec($comando);
-         }
-         else
+	 if ($abilita_stampa_cucina)
 	 {
-	  $comando = "sudo ./stampa.bash \"".$scontrino."\" \"xxxxx\" \"x\" \"xxx\" \"stampaannullascontrino.py\" \"xxx\" ".$prodid_stampante_cucina_dec." ".$vendid_stampante_cucina_dec." \"".$id_stampante_cucina."\" > /dev/null 2>&1 &";
-          exec($comando);
+	  // Stampa in cucina
+          $query = "SELECT * FROM stampanti WHERE cucina LIKE '1'";
+          $result = mysqli_query($link, $query);
+          $row=mysqli_fetch_assoc($result);
+          $nome_stampante_cucina = $row['nome'];
+          $formato_carta_cucina = $row['formatocarta'];
+          $tipo_stampante_cucina = $row['tipo'];
+          $id_stampante_cucina = $row['id'];
+          $prodid_stampante_cucina = "0x".$row['prodID'];
+          $vendid_stampante_cucina = "0x".$row['vendID'];
+          $codec_cucina = $row['codec'];
+          $prodid_stampante_cucina_dec = hexdec($row['prodID']);
+	  $vendid_stampante_cucina_dec = hexdec($row['vendID']);
+          $connessione_stampante_cucina = $row['connessione'];
+          $ip_stampante_cucina = $row['ip'];
+          if ($tipo_stampante_cucina != 'ESC-POS')
+          {
+	   $comando = "lp -d ".$tipo_stampante_cucina." ./scontrini/".$nome_ricevuta.".pdf";
+	   exec($comando);
+          }
+          else
+	  {
+	   $comando = "sudo ./stampa.bash \"".$scontrino."\" \"xxxxx\" \"x\" \"xxx\" \"stampaannullascontrino.py\" \"xxx\" ".$prodid_stampante_cucina_dec." ".$vendid_stampante_cucina_dec." \"".$id_stampante_cucina."\" > /dev/null 2>&1 &";
+           exec($comando);
+          }
          }
+	 else{
+	  ?><script type="text/javascript">
+          window.alert('STAMPANTE CUCINA NON ABILITATA');
+ 	  </script>
+	  <?
+         }
+
+	 if ($abilita_stampa_cucina2)
+	 {
+	  // Stampa in cucina2
+          $query = "SELECT * FROM stampanti WHERE cucina2 LIKE '1'";
+          $result = mysqli_query($link, $query);
+          $row=mysqli_fetch_assoc($result);
+          $nome_stampante_cucina2 = $row['nome'];
+          $formato_carta_cucina2 = $row['formatocarta'];
+          $tipo_stampante_cucina2 = $row['tipo'];
+          $id_stampante_cucina2 = $row['id'];
+          $prodid_stampante_cucina2 = "0x".$row['prodID'];
+          $vendid_stampante_cucina2 = "0x".$row['vendID'];
+          $codec_cucina2 = $row['codec'];
+          $prodid_stampante_cucina2_dec = hexdec($row['prodID']);
+	  $vendid_stampante_cucina2_dec = hexdec($row['vendID']);
+          $connessione_stampante_cucina2 = $row['connessione'];
+          $ip_stampante_cucina2 = $row['ip'];
+          if ($tipo_stampante_cucina2 != 'ESC-POS')
+          {
+	   $comando = "lp -d ".$tipo_stampante_cucina2." ./scontrini/".$nome_ricevuta.".pdf";
+	   exec($comando);
+          }
+          else
+	  {
+	   $comando = "sudo ./stampa.bash \"".$scontrino."\" \"xxxxx\" \"x\" \"xxx\" \"stampaannullascontrino.py\" \"xxx\" ".$prodid_stampante_cucina2_dec." ".$vendid_stampante_cucina2_dec." \"".$id_stampante_cucina2."\" > /dev/null 2>&1 &";
+           exec($comando);
+          }
+         }
+	 else{
+	  ?><script type="text/javascript">
+          window.alert('STAMPANTE CUCINA2 NON ABILITATA');
+ 	  </script>
+	  <?
+         }
+
+
+	 
 	}
        }
 }

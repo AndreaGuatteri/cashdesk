@@ -11,6 +11,7 @@
 include("../../Accounts_MySql/datilogin.txt");
 
 	$query = "SELECT * FROM listino WHERE descrizione LIKE 'ESPORTAZIONE'";
+//	$query = "SELECT * FROM parametri WHERE descrizione LIKE 'asporto'";
 	$result = mysqli_query($link, $query);
 	$row=mysqli_fetch_array($result);
 	$stringa = "0|".$row['importo'];	

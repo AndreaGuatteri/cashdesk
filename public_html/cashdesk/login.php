@@ -5,6 +5,9 @@
 * Version: 1.0                                                                 *
 * Date:    21.11.2018                                                          *
 * Author:  Stefano LUISE                                                       *
+* Version: 2.1                                                                 *
+* Date:    24.07.2019                                                          *
+* Introdotta estensione scontrino bar                                          *
 *******************************************************************************/
 session_start();
 ?>
@@ -124,7 +127,7 @@ include("../../Accounts_MySql/datilogin.txt");
 		$sql = "SELECT * FROM stampanti";
 		$result = mysqli_query($link, $sql);
 		while($row = mysqli_fetch_assoc($result)) {
-		if ($row['cucina'] == 0)
+		if (($row['cucina'] == 0)&&($row['cucina2'] == 0))
 		 {
 		  echo "<option value='".$row['nome']."' size=18 style='width:80px;font-size:11px'>".$row['nome']."</option>";
 		 }

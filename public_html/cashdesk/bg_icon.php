@@ -2,9 +2,12 @@
 /*******************************************************************************
 * CASH DESK - SHOW ICON                                                        *
 *                                                                              *
-* Version: 1.0                                                                 *
-* Date:    21.11.2018                                                          *
+* Version: 2.0                                                                 *
+* Date:    10.04.2019                                                          *
 * Author:  Stefano LUISE                                                       *
+* Version: 2.1                                                                 *
+* Date:    24.07.2019                                                          *
+* Introdotta estensione scontrino bar                                          *
 *******************************************************************************/
 ?>
 <!DOCTYPE html>
@@ -28,7 +31,7 @@
       <td><img src="img/blank.gif" alt="" height="1" width="10"></td>
       <td align="justify"><FONT face="Arial" size="4" color="#800080"> CASH DESK -</FONT></td>
       <td><img src="img/blank.gif" alt="" height="1" width="10"></td>
-      <td align="justify"><FONT face="Arial" size="4" color="#800080"> Ver. 1.0</FONT></td>
+      <td align="justify"><FONT face="Arial" size="4" color="#800080"> Ver. 2.1</FONT></td>
      
     </tr>
   </tbody>

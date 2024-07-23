@@ -73,11 +73,11 @@ define ("ROLE_BASIC", 3);
 			</tr>
 			<tr valign="top">
 				<td align="left" class="navi">		
+				<a class="n" target="content" onclick="h(this);" href="dataora.php">Data e ora</a><br>
 				<a class="n" target="content" onclick="h(this);" href="impostazioni.php">Impostazioni</a><br>
 				<a class="n" target="content" onclick="h(this);" href="gestione_stampanti.php">Stampanti</a><br>
 				<a class="n" target="content" onclick="h(this);" href="bk_ld_db.php">Carica/Salva archivio</a><br>
 				<span class="navi">[PHP: <?php echo phpversion(); ?>]</span>					
-				<a class="n" target="content" onclick="h(this);" href="phpinfo.php">phpinfo</a><br>
 				</td>
 			</tr>
 <?
